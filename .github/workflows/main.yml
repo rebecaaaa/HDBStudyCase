@@ -85,9 +85,9 @@ jobs:
       - name: Install OWASP Dependency-Check
         run: |
             wget https://github.com/jeremylong/DependencyCheck/releases/download/v10.0.4/dependency-check-10.0.4-release.zip
-        unzip dependency-check-10.0.4-release.zip
-        sudo mv dependency-check/bin/dependency-check.sh /usr/local/bin/dependency-check
-        sudo chmod +x /usr/local/bin/dependency-check
+            unzip dependency-check-10.0.4-release.zip
+            sudo mv dependency-check/bin/dependency-check.sh /usr/local/bin/dependency-check
+            sudo chmod +x /usr/local/bin/dependency-check
 
     - name: Run OWASP Dependency Check
       run: |
