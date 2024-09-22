@@ -2,9 +2,9 @@ name: CI/CD Pipeline
 
 on:
   push:
-    branches: ["master", "development"]
+    branches: ["master", "development", "staging"]
   pull_request:
-    branches: ["master", "development"]
+    branches: ["master", "development", "staging"]
 
 jobs:
   build:
@@ -107,6 +107,19 @@ jobs:
       - name: Check out code
         uses: actions/checkout@v3
 
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKERHUB_USER }}
+          password: ${{ secrets.DOCKERHUB_PWD }}
+
+      - name: Build Docker image
+        run: |
+          docker build -t task-manager-app .
+
       - name: Deploy to Review Environment
         run: |
           docker run -d --name task-manager-review -p 5001:5000 task-manager-app
@@ -114,8 +127,10 @@ jobs:
   dast:
     needs: review
     runs-on: ubuntu-24.04
+
     steps:
-      - uses: actions/checkout@v4
+      - name: Check out code
+        uses: actions/checkout@v4
 
       - name: Install OWASP ZAP
         run: |
@@ -133,7 +148,7 @@ jobs:
           path: relatorio.html
 
   deploy:
-    needs: 
+    needs:
       - build
       - review
       - dast
@@ -145,4 +160,5 @@ jobs:
       - name: Deploy to Production
         run: |
           docker run -d --name task-manager-production -p 5000:5000 task-manager-app || true
+
 
