@@ -103,6 +103,7 @@ jobs:
   review:
     needs: build
     runs-on: ubuntu-latest
+
     steps:
       - name: Check out code
         uses: actions/checkout@v3
@@ -153,6 +154,7 @@ jobs:
       - review
       - dast
     runs-on: ubuntu-latest
+
     steps:
       - name: Check out code
         uses: actions/checkout@v3
@@ -161,4 +163,29 @@ jobs:
         run: |
           docker run -d --name task-manager-production -p 5000:5000 task-manager-app || true
 
+  monitoring:
+    needs: deploy
+    runs-on: ubuntu-latest
 
+    steps:
+      - name: Set up Prometheus
+        run: |
+          docker run -d -p 9090:9090 --name prometheus \
+          -v $(pwd)/prometheus.yml:/etc/prometheus/prometheus.yml prom/prometheus
+
+      - name: Set up node_exporter
+        run: |
+          docker run -d -p 9100:9100 --name node-exporter prom/node-exporter
+
+      - name: Wait for Prometheus to start
+        run: sleep 10
+
+      - name: Query Prometheus metrics
+        run: |
+          curl http://localhost:9090/api/v1/query?query=node_memory_MemAvailable_bytes
+          
+      - name: Upload Prometheus Metrics
+        uses: actions/upload-artifact@v3
+        with:
+          name: prometheus-metrics
+          path: ./prometheus_metrics.json
