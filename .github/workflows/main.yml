@@ -133,7 +133,10 @@ jobs:
           path: relatorio.html
 
   deploy:
-    needs: build, review, dast
+    needs: 
+      - build
+      - review
+      - dast
     runs-on: ubuntu-latest
     steps:
       - name: Check out code
