@@ -43,7 +43,7 @@ jobs:
           pip install pytest
           pip install -r requirements.txt
 
-      - name: Run unit test
+      - name: Run unit tests
         run: |
           pytest
         continue-on-error: true
@@ -82,18 +82,42 @@ jobs:
     steps:
       - name: Check out code
         uses: actions/checkout@v3
-
+      
       - name: Install OWASP Dependency-Check
         run: |
           wget https://github.com/jeremylong/DependencyCheck/releases/download/v10.0.4/dependency-check-10.0.4-release.zip
           unzip dependency-check-10.0.4-release.zip
+          sudo mv dependency-check/bin/dependency-check.sh /usr/local/bin/dependency-check
+          sudo chmod +x /usr/local/bin/dependency-check
 
       - name: Run OWASP Dependency Check
         run: |
-          ./dependency-check/bin/dependency-check.sh --project "Task-Manager-using-Flask" -o ./dependency-check-report --scan . --exclude "**/*.dll" --exclude "**/*.exe" || true
+          /usr/local/bin/dependency-check --project "Task-Manager-using-Flask" -o ./dependency-check-report --scan . --exclude "**/*.dll" --exclude "**/*.exe" || true
 
       - name: Upload Dependency Check Report
         uses: actions/upload-artifact@v3
         with:
           name: dependency-check-report
           path: ./dependency-check-report
+
+  review:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v3
+
+      - name: Deploy to Review Environment
+        run: |
+          docker run -d --name task-manager-review -p 5001:5000 task-manager-app
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v3
+
+      - name: Deploy to Production
+        run: |
+          docker run -d --name task-manager-production -p 5002:5000 task-manager-app || true
