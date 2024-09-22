@@ -29,7 +29,7 @@ jobs:
     runs-on: ubuntu-24.04
 
     steps:
-      - name: Checkout code
+      - name: Check out code
         uses: actions/checkout@v3
 
       - name: Set up Python 3.9
@@ -53,7 +53,8 @@ jobs:
     runs-on: ubuntu-24.04
 
     steps:
-      - uses: actions/checkout@v3
+      - name: Check out code
+        uses: actions/checkout@v3
 
       - name: Set up Python 3.9
         uses: actions/setup-python@v5
@@ -80,21 +81,19 @@ jobs:
 
     steps:
       - name: Check out code
-        uses: actions/upload-artifact@v3
-      
+        uses: actions/checkout@v3
+
       - name: Install OWASP Dependency-Check
         run: |
-            wget https://github.com/jeremylong/DependencyCheck/releases/download/v10.0.4/dependency-check-10.0.4-release.zip
-            unzip dependency-check-10.0.4-release.zip
-            sudo mv dependency-check/bin/dependency-check.sh /usr/local/bin/dependency-check
-            sudo chmod +x /usr/local/bin/dependency-check
+          wget https://github.com/jeremylong/DependencyCheck/releases/download/v10.0.4/dependency-check-10.0.4-release.zip
+          unzip dependency-check-10.0.4-release.zip
 
-    - name: Run OWASP Dependency Check
-      run: |
-        /usr/local/bin/dependency-check --project "Task-Manager-using-Flask" -o ./dependency-check-report --scan . --exclude "**/*.dll" --exclude "**/*.exe" || true
+      - name: Run OWASP Dependency Check
+        run: |
+          ./dependency-check/bin/dependency-check.sh --project "Task-Manager-using-Flask" -o ./dependency-check-report --scan . --exclude "**/*.dll" --exclude "**/*.exe" || true
 
-    - name: Upload Dependency Check Report
-      uses: actions/upload-artifact@v3
-      with:
-        name: dependency-check-report
-        path: ./dependency-check-report
+      - name: Upload Dependency Check Report
+        uses: actions/upload-artifact@v3
+        with:
+          name: dependency-check-report
+          path: ./dependency-check-report
