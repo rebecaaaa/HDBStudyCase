@@ -2,9 +2,9 @@ name: CI/CD Pipeline
 
 on:
   push:
-    branches: ["master", "development"]
+    branches: ["master", "development","staging"]
   pull_request:
-    branches: ["master", "development"]
+    branches: ["master", "development","staging"]
 
 jobs:
   build:
@@ -111,6 +111,27 @@ jobs:
         run: |
           docker run -d --name task-manager-review -p 5001:5000 task-manager-app
 
+  dast:
+    needs: deploy-staging
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install OWASP ZAP
+        run: |
+          sudo apt-get update
+          sudo apt-get install zaproxy -y
+
+      - name: Run OWASP ZAP DAST
+        run: |
+          ./zap.sh -cmd -quickurl http://127.0.0.1:5000/ -quickout ./relatorio.html -port 8081
+
+      - name: Upload OWASP ZAP Report
+        uses: actions/upload-artifact@v3
+        with:
+          name: zap-report
+          path: relatorio.html
+
   deploy:
     needs: build
     runs-on: ubuntu-latest
@@ -120,4 +141,4 @@ jobs:
 
       - name: Deploy to Production
         run: |
-          docker run -d --name task-manager-production -p 5002:5000 task-manager-app || true
+          docker run -d --name task-manager-production -p 5000:5000 task-manager-app || true
