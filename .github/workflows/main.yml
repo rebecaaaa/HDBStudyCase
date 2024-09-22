@@ -2,9 +2,9 @@ name: CI/CD Pipeline
 
 on:
   push:
-    branches: ["master", "development","staging"]
+    branches: ["master", "development"]
   pull_request:
-    branches: ["master", "development","staging"]
+    branches: ["master", "development"]
 
 jobs:
   build:
@@ -112,7 +112,7 @@ jobs:
           docker run -d --name task-manager-review -p 5001:5000 task-manager-app
 
   dast:
-    needs: deploy-staging
+    needs: review
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
@@ -133,7 +133,7 @@ jobs:
           path: relatorio.html
 
   deploy:
-    needs: build
+    needs: build, review, dast
     runs-on: ubuntu-latest
     steps:
       - name: Check out code
@@ -142,3 +142,4 @@ jobs:
       - name: Deploy to Production
         run: |
           docker run -d --name task-manager-production -p 5000:5000 task-manager-app || true
+
